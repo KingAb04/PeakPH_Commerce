@@ -71,11 +71,23 @@ html {
   position: relative;
 }
 
+.top-navbar .cart-link {
+  text-decoration: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  transition: color 0.3s ease;
+}
+
+.top-navbar .cart-link:hover {
+  color: #3da180;
+}
+
 .top-navbar .cart-count {
   position: absolute;
   top: -6px;
   right: -10px;
-  background: #000;
+  background: #e74c3c;
   color: #fff;
   font-size: 0.65rem;
   width: 1.1rem;
@@ -84,6 +96,7 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: bold;
 }
 
 /* BOTTOM NAVBAR */

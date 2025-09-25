@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($email === $admin_email && $password === $admin_pass) {
         $_SESSION['logged_in'] = true;
         $_SESSION['admin_email'] = $email;
-        header("Location: admin.php");
+        header("Location: admin/index.php");
         exit;
     } else {
         // Back to index with error flag

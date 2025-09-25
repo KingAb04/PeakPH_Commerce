@@ -1,9 +1,9 @@
 <?php
 session_start();
 
-// If already logged in, redirect to admin.php
+// If already logged in, redirect to admin dashboard
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    header("Location: admin.php");
+    header("Location: admin/index.php");
     exit;
 }
 ?>
@@ -46,26 +46,32 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
           <i class="bi bi-person"></i>
           <span>Login</span>
         </button>
-        <i class="bi bi-cart">
-          <span class="cart-count">0</span>
-        </i>
+        <a href="cart.php" class="cart-link">
+          <i class="bi bi-cart">
+            <span class="cart-count">
+              <?php 
+                echo isset($_SESSION['cart']) ? count($_SESSION['cart']) : '0'; 
+              ?>
+            </span>
+          </i>
+        </a>
       </div>
     </div>
 
     <!-- Bottom Navbar -->
     <div class="bottom-navbar">
       <nav>
-        <a href="#shop">Shop</a>
-        <a href="#product">Product</a>
+  <a href="ProductCatalog.php">Shop</a>
         <a href="#contact">Contact Us</a>
         <a href="#deals" class="best-deals">Best Deals</a>
+        <a href="#about">About us</a>
       </nav>
     </div>
   </header>
 
   <!-- HERO -->
 <?php
-$carouselSlides = include __DIR__ . '/categories/content/carousel_data.php';
+$carouselSlides = include __DIR__ . '/admin/content/carousel_data.php';
 ?>
 <div class="hero">
     <div class="slides" id="slides">
@@ -83,7 +89,7 @@ $carouselSlides = include __DIR__ . '/categories/content/carousel_data.php';
                   
   <!-- MID CONTAINER -->
   <?php
-    $promoCard = include __DIR__ . '/categories/content/bestseller_data.php';
+    $promoCard = include __DIR__ . '/admin/content/bestseller_data.php';
   ?>
   <section class="best-seller">
   <h2>Best Sellers</h2>
@@ -183,30 +189,83 @@ $carouselSlides = include __DIR__ . '/categories/content/carousel_data.php';
 
   <!-- NEW ARRIVALS -->
   <?php
-  $arrivalsData = include __DIR__ . '/categories/content/new_arrivals_data.php';
+  $arrivalsData = include __DIR__ . '/admin/content/new_arrivals_data.php';
   ?>
   <section class="new-arrivals">
     <h2 style="color: white">New Arrivals</h2>
-    <div class="arrivals-grid">
-      <?php if (!empty($arrivalsData['arrivals'])) {
-        foreach ($arrivalsData['arrivals'] as $arrival) { ?>
-          <div class="arrival-card">
-            <?php if (!empty($arrival['link'])) { ?>
-              <a href="<?php echo htmlspecialchars($arrival['link']); ?>" class="logo-btn">
+    <div class="arrivals-slider-container">
+      <button class="arrivals-slider-arrow left" id="arrivalsSliderLeft">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <div class="arrivals-grid" id="arrivalsGrid">
+        <?php if (!empty($arrivalsData['arrivals'])) {
+          foreach ($arrivalsData['arrivals'] as $arrival) { ?>
+            <div class="arrival-card">
+              <?php if (!empty($arrival['link'])) { ?>
+                <a href="<?php echo htmlspecialchars($arrival['link']); ?>" class="logo-btn">
+                  <img src="<?php echo htmlspecialchars($arrival['image']); ?>" alt="<?php echo htmlspecialchars($arrival['alt']); ?>" />
+                </a>
+              <?php } else { ?>
                 <img src="<?php echo htmlspecialchars($arrival['image']); ?>" alt="<?php echo htmlspecialchars($arrival['alt']); ?>" />
-              </a>
-            <?php } else { ?>
-              <img src="<?php echo htmlspecialchars($arrival['image']); ?>" alt="<?php echo htmlspecialchars($arrival['alt']); ?>" />
-            <?php } ?>
-            <p class="product-name"><?php echo htmlspecialchars($arrival['name']); ?></p>
-            <span class="price">₱<?php echo htmlspecialchars($arrival['price']); ?></span>
-          </div>
-        <?php }
-      } else { ?>
-        <div style="color:#888; font-size:1.1em; padding:30px 0;">No new arrivals available.</div>
-      <?php } ?>
+              <?php } ?>
+              <p class="product-name"><?php echo htmlspecialchars($arrival['name']); ?></p>
+              <span class="price">₱<?php echo htmlspecialchars($arrival['price']); ?></span>
+            </div>
+          <?php }
+        } else { ?>
+          <div style="color:#888; font-size:1.1em; padding:30px 0;">No new arrivals available.</div>
+        <?php } ?>
+      </div>
+      <button class="arrivals-slider-arrow right" id="arrivalsSliderRight">
+        <i class="bi bi-chevron-right"></i>
+      </button>
     </div>
   </section>
+
+  <script>
+    // New Arrivals slider logic
+    document.addEventListener('DOMContentLoaded', function() {
+      const arrivalsGrid = document.getElementById('arrivalsGrid');
+      const leftBtn = document.getElementById('arrivalsSliderLeft');
+      const rightBtn = document.getElementById('arrivalsSliderRight');
+
+      function updateArrivalsSlider() {
+        if (!arrivalsGrid) return;
+        
+        const cardCount = arrivalsGrid.querySelectorAll('.arrival-card').length;
+        
+        if (cardCount <= 4) {
+          // Use grid layout for 4 or fewer cards
+          arrivalsGrid.classList.add('grid-layout');
+          leftBtn.style.display = 'none';
+          rightBtn.style.display = 'none';
+        } else {
+          // Use slider layout for more than 4 cards
+          arrivalsGrid.classList.remove('grid-layout');
+          leftBtn.style.display = 'flex';
+          rightBtn.style.display = 'flex';
+        }
+      }
+
+      function scrollArrivalsGrid(direction) {
+        if (!arrivalsGrid || arrivalsGrid.classList.contains('grid-layout')) return;
+        
+        const cardWidth = 250 + 32; // card width + gap
+        arrivalsGrid.scrollBy({ 
+          left: direction * cardWidth, 
+          behavior: 'smooth' 
+        });
+      }
+
+      if (leftBtn && rightBtn) {
+        leftBtn.addEventListener('click', () => scrollArrivalsGrid(-1));
+        rightBtn.addEventListener('click', () => scrollArrivalsGrid(1));
+      }
+
+      updateArrivalsSlider();
+      window.addEventListener('resize', updateArrivalsSlider);
+    });
+  </script>
 
   
   <!-- NEWSLETTER SIGNUP -->
