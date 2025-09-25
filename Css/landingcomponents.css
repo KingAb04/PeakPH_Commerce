@@ -1,0 +1,392 @@
+/* <======================================== ALIGN BEST SELLERS H2 ==================================> */
+.best-seller h2 {
+  text-align: center;
+  margin-left: 64px;
+  font-size: 3.2rem;
+  margin-left: 0;
+  font-weight: 700;
+}
+/* <======================================== HERO SLIDER ==================================> */
+.hero {
+  width: 100%;
+  aspect-ratio: 1750 / 500; /* keeps proportions */
+  max-height: 550px; /* optional cap */
+  overflow: hidden;
+}
+
+.slide {
+  flex: 0 0 100%;
+  position: relative;
+  background-size: cover;      /* This makes the image cover the area */
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat;
+}
+
+.slides {
+  display: flex;
+  transition: transform 0.5s ease;
+  height: 100%;
+}
+
+.slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.voucher-slide .shop-btn {
+  position: absolute;
+  top: 86.5%; /* adjust */
+  left: 88.8%;
+  transform: translate(-50%, -50%);
+  background-color: #3da180;
+  color: #fff;
+  padding: 14px 40px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: "Poppins", sans-serif; /* ✅ added */
+  font-weight: 600; /* makes it bolder, like Canva */
+  text-decoration: none;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s ease;
+}
+
+.voucher-slide .shop-btn:hover {
+  background-color: #245d4b;
+}
+
+.deals-slide .shop-btn {
+  position: absolute;
+  top: 86.5%; /* adjust */
+  left: 88.8%;
+  transform: translate(-50%, -50%);
+  background-color: #3d92a1;
+  color: #fff;
+  padding: 14px 40px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: "Poppins", sans-serif; /* ✅ added */
+  font-weight: 600; /* makes it bolder, like Canva */
+  text-decoration: none;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s ease;
+}
+
+.deals-slide .shop-btn:hover {
+  background-color: #0b6a8f;
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.8rem;          /* adjust arrow size */
+  line-height: 1;             /* prevents vertical offset */
+  color: white;
+  background: rgba(0, 0, 0, 0.3);
+  border: none;
+  cursor: pointer;
+
+  width: 50px;
+  height: 50px;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  z-index: 10;
+}
+.prev {
+  left: 1rem;
+}
+
+.next {
+  right: 1rem;
+}
+
+.shop-btn {
+  position: absolute;
+  top: 70%; /* adjust vertical position */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #2e765e; /* your palette */
+  color: #fff;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-size: 3.2rem;
+  text-align: center;
+  margin-left: 64px;
+  color: #2e765e;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s ease;
+}
+
+.shop-btn:hover {
+  background-color: #245d4b; /* darker shade */
+}
+/* <======================================== BEST SELLER SECTION ==================================> */
+.best-seller {
+  padding: 3rem 1rem;
+  text-align: center;
+  background: #ffffff;
+}
+
+.best-seller h2 {
+  font-size: 1.8rem;
+  color: #2e765e !important;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+  padding-left: 250px;
+}
+
+.seller-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Card is now an anchor tag */
+.seller-card {
+  display: block;
+  position: relative;
+  background: #fffff0; /* ivory */
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  text-align: center;
+  text-decoration: none; /* removes underline */
+  color: inherit; /* keeps text styled */
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+}
+
+.seller-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  background: #fffdf5; /* subtle glow effect */
+}
+
+.seller-card img {
+  width: 90%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 0.8rem;
+}
+
+/* Badge styling */
+.seller-card .badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #2e765e;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+}
+
+/* Product text */
+.seller-card .product-name {
+  font-weight: 600;
+  color: #333;
+  margin: 0.4rem 0;
+  font-size: 1rem;
+}s
+
+.seller-card .product-desc {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+/* Rating */
+.seller-card .rating {
+  font-size: 0.9rem;
+  color: #f4a261; /* warm star color */
+  margin-bottom: 0.5rem;
+}
+
+.seller-card .review-count {
+  font-size: 0.8rem;
+  color: #555;
+}
+
+/* Price */
+.seller-card .price {
+  display: block;
+  color: #2e765e;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.best-seller-flex {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  
+}
+.promo-carousel {
+  width: 260px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+.promo-card-wrapper {
+  width: 100%;
+  min-height: 340px;
+  position: relative;
+}
+.promo-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
+  width: 100%;
+  min-height: 340px;
+  display: block;
+  transition: box-shadow 0.2s;
+}
+.promo-card img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+}
+.promo-content {
+  padding: 1rem;
+  text-align: center;
+}
+.promo-btn {
+  display: inline-block;
+  margin-top: 1rem;
+  background: #1e88e5;
+  color: #fff;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.promo-btn:hover {
+  background: #1565c0;
+}
+.promo-arrow {
+  background: #fff;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  margin: 0.5rem 0;
+  transition: background 0.2s;
+}
+.promo-arrow:hover {
+  background: #f0f0f0;
+}
+.promo-arrow.left {
+  position: absolute;
+  top: 50%;
+  left: -18px;
+  transform: translateY(-50%);
+}
+.promo-arrow.right {
+  position: absolute;
+  top: 50%;
+  right: -18px;
+  transform: translateY(-50%);
+}
+@media (max-width: 900px) {
+  .best-seller-flex { flex-direction: column; }
+  .promo-carousel { width: 100%; min-width: 0; margin-bottom: 1.5rem; }
+}
+
+
+.best-seller-flex {
+  display: flex;
+  gap: 2rem;
+  align-items: start;
+}
+
+.promo-content {
+  flex: 0 0 300px;
+  padding: 2rem;
+    background: linear-gradient(135deg, #2e765e 80%, #245d4b 100%);
+    color: #fff;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-left: 32px; /* Move promo-content to the right */
+}
+
+.promo-content h3 {
+  font-size: 2rem;
+  margin: 0;
+}
+
+.promo-text {
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.special-offer {
+  background: rgba(46, 118, 94, 0.12);
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.offer-tag {
+  background: #3da180;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+.special-offer h4 {
+  font-size: 2.5rem;
+  margin: 0.5rem 0;
+}
+
+.promo-details {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.promo-cta {
+  background: #0ea170;
+  color: white;
+  text-decoration: none;
+  padding: 1rem 2rem;
+  border-radius: 25px;
+  text-align: center;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.promo-cta:hover {
+  background: #245d4b;
+}
+
+@media (max-width: 992px) {
+  .best-seller-flex {
+    flex-direction: column;
+  }
+  
+  .promo-content {
+    flex: none;
+    width: 100%;
+  }
+}
