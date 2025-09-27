@@ -73,7 +73,16 @@ function bypassUser(userId) {
 // ===== LOGOUT FUNCTION =====
 function logout() {
   if (confirm("Are you sure you want to logout?")) {
-    window.location.href = "../admin.php";
+    // Detect current path and use appropriate logout path
+    let currentPath = window.location.pathname;
+    let logoutPath = "logout.php";
+    
+    // If we're in a subdirectory (like inventory/ or content/), use ../logout.php
+    if (currentPath.includes("/inventory/") || currentPath.includes("/content/") || currentPath.includes("/users/")) {
+      logoutPath = "../logout.php";
+    }
+    
+    window.location.href = logoutPath;
   }
 }
 

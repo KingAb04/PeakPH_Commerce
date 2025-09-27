@@ -1,11 +1,15 @@
 <?php
 session_start();
 
-// If already logged in, redirect to admin dashboard
-if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    header("Location: admin/index.php");
+// Check if user is an admin and redirect accordingly
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && 
+    isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true) {
+    header("Location: admin/dashboard.php");
     exit;
 }
+
+// Regular users don't have access to admin functions through this site
+// Customer login functionality would be implemented separately
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -282,57 +286,8 @@ $carouselSlides = include __DIR__ . '/admin/content/carousel_data.php';
 
   
 
-  <!-- LOGIN MODAL -->
-  <div id="authModal" class="login-modal">
-    <div class="login-card">
-      <div class="login-left">
-        <h2>Log In</h2>
-
-        <?php if (isset($_GET['login']) && $_GET['login'] === 'failed'): ?>
-          <p style="color: red;">Invalid email or password</p>
-        <?php endif; ?>
-
-        <p class="welcome-text">Welcome back! Please enter your details</p>
-
-        <form id="emailLoginForm" method="POST" action="login.php">
-          <label>Email</label>
-          <input type="email" name="email" placeholder="Enter your email" required />
-
-          <label>Password</label>
-          <div class="password-field">
-            <input type="password" name="password" placeholder="Enter your password" required />
-            <i class="bi bi-eye"></i>
-          </div>
-
-          <a href="#" class="forgot-password">Forgot password?</a>
-          <button type="submit" class="login-btn-main">Log in</button>
-
-          <div class="or-divider"><span>Or Continue With</span></div>
-
-          <div class="social-login">
-            <button type="button" class="google-btn">
-              <i class="bi bi-google"></i> Google
-            </button>
-            <button type="button" class="facebook-btn">
-              <i class="bi bi-facebook"></i> Facebook
-            </button>
-          </div>
-        </form>
-
-        <p class="signup-text">
-          Don't have an account? <a href="#">Sign up</a>
-        </p>
-      </div>
-
-      <button class="close-btn" id="closeModal">
-        <i class="bi bi-x-lg"></i>
-      </button>
-
-      <div class="login-right">
-        <div class="overlay"></div>
-      </div>
-    </div>
-  </div>
+  <!-- AUTH MODAL COMPONENT -->
+  <?php include 'components/auth_modal.php'; ?>
 
   <!-- CHATBOT -->
   <div id="chatbot-icon">💬</div>
@@ -413,6 +368,7 @@ $carouselSlides = include __DIR__ . '/admin/content/carousel_data.php';
 
   <!-- SCRIPTS -->
   <script src="Js/JavaScript.js"></script>
+  <script src="components/auth_modal_otp.js"></script>
   <script src="Js/chatbot.js"></script>
 </body>
 </html>

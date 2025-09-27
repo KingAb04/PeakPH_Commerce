@@ -1,12 +1,7 @@
 <?php
-session_start();
+require_once('../auth_helper.php');
+requireAdminAuth();
 require_once("../../includes/db.php");
-
-// Redirect if not logged in
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-  header("Location: ../index.php");
-  exit;
-}
 
 // Handle Add User form
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_user'])) {
@@ -48,12 +43,23 @@ $users = $conn->query("SELECT * FROM users ORDER BY id DESC");
   <!-- SIDEBAR -->
   <div class="sidebar">
     <h3>Menu</h3>
-    <a href="../../admin.php" class="menu-link"><i class="bi bi-house"></i> Admin Home</a>
+    <a href="../admin.php" class="menu-link"><i class="bi bi-house"></i> Admin Home</a>
     <a href="../dashboard.php" class="menu-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
     <a href="../mini-view.php" class="menu-link"><i class="bi bi-pencil-square"></i> Mini View</a>
-    <a href="inventorycode/inventory.php" class="menu-link"><i class="bi bi-box"></i> Inventory</a>
+    <a href="../inventory/inventory.php" class="menu-link"><i class="bi bi-box"></i> Inventory</a>
     <a href="../orders.php" class="menu-link"><i class="bi bi-bag"></i> Orders</a>
     <a href="users.php" class="menu-link active"><i class="bi bi-people"></i> Users</a>
+
+    <button class="collapsible" onclick="toggleContentManager()">
+      <i class="bi bi-folder"></i> Content Manager
+      <span id="arrow" style="float:right;">&#9660;</span>
+    </button>
+    <div class="content-manager-links" id="contentManagerLinks" style="display:block; margin-left: 15px;">
+      <a href="../content/carousel.php" class="menu-link"><i class="bi bi-images"></i> Carousel</a>
+      <a href="../content/bestseller.php" class="menu-link"><i class="bi bi-star"></i> Best Seller</a>
+      <a href="../content/new_arrivals.php" class="menu-link"><i class="bi bi-lightning"></i> New Arrivals</a>
+      <a href="../content/footer.php" class="menu-link"><i class="bi bi-layout-text-window-reverse"></i> Footer</a>
+    </div>
   </div>
 
   <!-- MAIN CONTENT -->
@@ -170,6 +176,24 @@ $users = $conn->query("SELECT * FROM users ORDER BY id DESC");
       if (confirm("Are you sure you want to delete this user?")) {
         window.location.href = "users_delete.php?id=" + id;
       }
+    }
+
+    // Toggle Content Manager function
+    function toggleContentManager() {
+      const links = document.getElementById("contentManagerLinks");
+      const arrow = document.getElementById("arrow");
+      if (links.style.display === "none") {
+        links.style.display = "block";
+        arrow.innerHTML = "&#9660;";
+      } else {
+        links.style.display = "none";
+        arrow.innerHTML = "&#9654;";
+      }
+    }
+
+    // Logout function
+    function logout() {
+      window.location.href = "../logout.php";
     }
   </script>
 </body>

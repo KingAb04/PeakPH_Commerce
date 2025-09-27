@@ -495,11 +495,9 @@ html {
 }
 
 .login-btn:hover {
-	color: #8b5e3c;
-	transform: scale(1.05);
-}
-
-/* Modal Overlay */
+  color: #245d4b;
+  transform: scale(1.05);
+}/* Modal Overlay */
 .login-modal {
   display: none;               /* hidden by default */
   position: fixed;             /* overlay */
@@ -538,11 +536,11 @@ html {
 
 .login-left h2 {
   font-weight: 700;
-  color: #5b3a29;
+  color: #245d4b;
 }
 
 .welcome-text {
-  color: #7a5e4b;
+  color: #1a4435;
   font-size: 14px;
   margin-bottom: 20px;
 }
@@ -581,7 +579,7 @@ html {
   display: inline-block;
   margin-top: 8px;
   font-size: 13px;
-  color: #b07d62;
+  color: #245d4b;
 }
 
 .login-btn-main {
@@ -589,7 +587,7 @@ html {
   width: 100%;
   padding: 12px;
   border: none;
-  background: #8b5e3c;
+  background: #245d4b;
   color: white;
   font-weight: 600;
   border-radius: 8px;
@@ -597,7 +595,7 @@ html {
 }
 
 .login-btn-main:hover {
-  background: #70442a;
+  background: #0f3624;
 }
 
 .or-divider {
@@ -638,7 +636,7 @@ html {
 }
 
 .signup-text a {
-  color: #8b5e3c;
+  color: #245d4b;
   font-weight: 500;
 }
 
@@ -647,7 +645,7 @@ html {
   position: absolute;
   top: 15px;
   right: 15px;
-  background: #8b5e3c;
+  background: #245d4b;
   border: none;
   color: white;
   font-size: 16px;
@@ -664,14 +662,14 @@ html {
 }
 
 .close-btn:hover {
-  background: #70442a;
+  background: #1a4435;
   transform: scale(1.1);
 }
 
 /* Right Side */
 .login-right {
   flex: 1;
-  background: linear-gradient(to bottom right, #bfa48a, #8b5e3c);
+  background: linear-gradient(to bottom right, #a8c5a8, #245d4b);
   position: relative;
 }
 

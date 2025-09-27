@@ -23,12 +23,12 @@ session_start();
   <!-- SIDEBAR -->
   <div class="sidebar">
     <h3>Menu</h3>
-    <a href="../admin.php" class="menu-link"><i class="bi bi-house"></i> Admin Home</a>
+    <a href="admin.php" class="menu-link"><i class="bi bi-house"></i> Admin Home</a>
     <a href="dashboard.php" class="menu-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
     <a href="mini-view.php" class="menu-link active"><i class="bi bi-pencil-square"></i> Mini View</a>
-    <a href="inventorycode/inventory.php" class="menu-link"><i class="bi bi-box"></i> Inventory</a>
+    <a href="inventory/inventory.php" class="menu-link"><i class="bi bi-box"></i> Inventory</a>
     <a href="orders.php" class="menu-link"><i class="bi bi-bag"></i> Orders</a>
-    <a href="users.php" class="menu-link"><i class="bi bi-people"></i> Users</a>
+    <a href="users/users.php" class="menu-link"><i class="bi bi-people"></i> Users</a>
     <!-- Collapsible Content Manager (expanded by default) -->
     <button class="collapsible" onclick="toggleContentManager()">
       <i class="bi bi-folder"></i> Content Manager

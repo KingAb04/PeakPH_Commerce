@@ -1,4 +1,4 @@
-# Coolpals PeakPH Website Structure
+a# Coolpals PeakPH Website Structure
 
 ## Project Overview
 This is an e-commerce website for camping gear and outdoor equipment built with PHP.
@@ -6,7 +6,7 @@ This is an e-commerce website for camping gear and outdoor equipment built with 
 ## Directory Structure
 
 ```
-Coolpals_PeakPH/
+PeakPH_Commerce/
 ├── admin/                          # Admin panel (Backend)
 │   ├── index.php                   # Admin dashboard homepage
 │   ├── dashboard.php               # Analytics dashboard
@@ -56,17 +56,17 @@ Coolpals_PeakPH/
 ## Access URLs
 
 ### User Side (Frontend)
-- Homepage: `http://localhost/Coolpals_PeakPH/`
-- Product Catalog: `http://localhost/Coolpals_PeakPH/ProductCatalog.php`
-- Shopping Cart: `http://localhost/Coolpals_PeakPH/cart.php`
-- About: `http://localhost/Coolpals_PeakPH/about.php`
+- Homepage: `http://localhost/PeakPH_Commerce/`
+- Product Catalog: `http://localhost/PeakPH_Commerce/ProductCatalog.php`
+- Shopping Cart: `http://localhost/PeakPH_Commerce/cart.php`
+- About: `http://localhost/PeakPH_Commerce/about.php`
 
 ### Admin Side (Backend)
-- Admin Dashboard: `http://localhost/Coolpals_PeakPH/admin/`
-- Analytics Dashboard: `http://localhost/Coolpals_PeakPH/admin/dashboard.php`
-- Inventory Management: `http://localhost/Coolpals_PeakPH/admin/inventory/inventory.php`
-- User Management: `http://localhost/Coolpals_PeakPH/admin/users/`
-- Orders: `http://localhost/Coolpals_PeakPH/admin/orders.php`
+- Admin Dashboard: `http://localhost/PeakPH_Commerce/admin/`
+- Analytics Dashboard: `http://localhost/PeakPH_Commerce/admin/dashboard.php`
+- Inventory Management: `http://localhost/PeakPH_Commerce/admin/inventory/inventory.php`
+- User Management: `http://localhost/PeakPH_Commerce/admin/users/`
+- Orders: `http://localhost/PeakPH_Commerce/admin/orders.php`
 
 ## Features
 

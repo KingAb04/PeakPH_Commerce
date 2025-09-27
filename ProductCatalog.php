@@ -21,6 +21,7 @@ foreach ($_SESSION['cart'] as $item) {
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="Css/Global.css" />
   <link rel="stylesheet" href="Css/prod.css" />
 </head>
 <body>
@@ -331,6 +332,9 @@ foreach ($_SESSION['cart'] as $item) {
     </div>
   </main>
 
+  <!-- AUTH MODAL COMPONENT -->
+  <?php include 'components/auth_modal.php'; ?>
+
 <script>
 // JavaScript for add to cart functionality and filtering
 document.addEventListener('DOMContentLoaded', function() {
@@ -432,5 +436,8 @@ document.addEventListener('DOMContentLoaded', function() {
   filterProducts();
 });
 </script>
+
+<!-- Include Auth Modal Component Script -->
+<script src="components/auth_modal.js"></script>
 </body>
 </html>

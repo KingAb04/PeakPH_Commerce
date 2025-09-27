@@ -90,55 +90,7 @@ let currentIndex = 0;
   }, 3000);
 });
 
-	/// ========log in sign up script==========
-const loginIcon = document.getElementById("loginIcon");
-const authModal = document.getElementById("authModal");
-const closeModalBtn = document.getElementById("closeModal");
-
-if (loginIcon && authModal && closeModalBtn) {
-  // Open modal
-  loginIcon.addEventListener("click", () => {
-    authModal.classList.add("active");
-  });
-
-  // Close modal
-  closeModalBtn.addEventListener("click", () => {
-    authModal.classList.remove("active");
-  });
-
-  // Close when clicking outside modal
-  window.addEventListener("click", (event) => {
-    if (event.target === authModal) {
-      authModal.classList.remove("active");
-    }
-  });
-
-  // Close with Esc key
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && authModal.classList.contains("active")) {
-      authModal.classList.remove("active");
-    }
-  });
-}
-
-  
-
-  // Open modal when clicking login icon
-  loginIcon.addEventListener("click", () => {
-    authModal.style.display = "flex";
-  });
-
-  // Close modal when clicking the X
-  closeModal.addEventListener("click", () => {
-    authModal.style.display = "none";
-  });
-
-    // Close when clicking outside modal
-  window.addEventListener("click", (event) => {
-    if (event.target === authModal) {
-      authModal.style.display = "none";
-    }
-  });
+	/// ========Login/signup modal is now handled by components/auth_modal.js========
 
 
   // ================= TENTS & TARPAULINS =================

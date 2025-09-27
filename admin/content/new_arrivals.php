@@ -1,11 +1,8 @@
 <?php
 // New Arrivals Content Manager (admin)
-session_start();
+require_once('../auth_helper.php');
+requireAdminAuth();
 $message = '';
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    header("Location: ../admin.php");
-    exit;
-}
 
 $dataFile = __DIR__ . '/new_arrivals_data.php';
 $uploadDir = '../../uploads/new_arrivals/';
@@ -138,24 +135,25 @@ $arrivals = $data['arrivals'];
 <body>
     <header>
         <h2>Content Manager &gt; New Arrivals</h2>
-        <button onclick="window.location.href='../../logout.php'">Logout</button>
+        <button onclick="logout()">Logout</button>
     </header>
     <div class="sidebar">
         <h3>Menu</h3>
-        <a href="../../admin.php" class="menu-link"><i class="bi bi-house"></i> Admin Home</a>
+        <a href="../admin.php" class="menu-link"><i class="bi bi-house"></i> Admin Home</a>
         <a href="../dashboard.php" class="menu-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
         <a href="../mini-view.php" class="menu-link"><i class="bi bi-pencil-square"></i> Mini View</a>
-        <a href="../inventorycode/inventory.php" class="menu-link"><i class="bi bi-box"></i> Inventory</a>
+        <a href="../inventory/inventory.php" class="menu-link"><i class="bi bi-box"></i> Inventory</a>
         <a href="../orders.php" class="menu-link"><i class="bi bi-bag"></i> Orders</a>
-        <a href="../users.php" class="menu-link"><i class="bi bi-people"></i> Users</a>
+        <a href="../users/users.php" class="menu-link"><i class="bi bi-people"></i> Users</a>
         <button class="collapsible" onclick="toggleContentManager()">
             <i class="bi bi-folder"></i> Content Manager
             <span id="arrow" style="float:right;">&#9660;</span>
         </button>
         <div class="content-manager-links" id="contentManagerLinks" style="display:block; margin-left: 15px;">
             <a href="carousel.php" class="menu-link"><i class="bi bi-images"></i> Carousel</a>
-            <a href="bestseller.php" class="menu-link"><i class="bi bi-star"></i> Best Sellers</a>
+            <a href="bestseller.php" class="menu-link"><i class="bi bi-star"></i> Best Seller</a>
             <a href="new_arrivals.php" class="menu-link active"><i class="bi bi-lightning"></i> New Arrivals</a>
+            <a href="footer.php" class="menu-link"><i class="bi bi-layout-text-window-reverse"></i> Footer</a>
         </div>
     </div>
     <div class="content">
