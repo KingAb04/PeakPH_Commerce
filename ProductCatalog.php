@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once 'includes/user_auth.php';
+require_once 'includes/db.php';
 
 // Initialize cart if it doesn't exist
 if (!isset($_SESSION['cart'])) {
@@ -11,6 +12,51 @@ $cart_count = 0;
 foreach ($_SESSION['cart'] as $item) {
     $cart_count += $item['quantity'];
 }
+
+// Get products from database
+$products = [];
+$use_database = false;
+
+if (isDatabaseConnected()) {
+    try {
+        $query = "SELECT id, product_name as name, price, image, tag, label, stock FROM inventory WHERE stock > 0 ORDER BY created_at DESC";
+        $result = executeQuery($query);
+        
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                // Fix image path for database products
+                $image_path = 'Assets/placeholder.svg';
+                if (!empty($row['image'])) {
+                    // Check if image exists, if not use placeholder
+                    if (file_exists('admin/' . $row['image'])) {
+                        $image_path = 'admin/' . $row['image'];
+                    } elseif (file_exists($row['image'])) {
+                        $image_path = $row['image'];
+                    }
+                }
+                
+                $products[] = [
+                    'id' => $row['id'],
+                    'name' => $row['name'],
+                    'price' => number_format($row['price'], 2),
+                    'price_raw' => $row['price'],
+                    'image' => $image_path,
+                    'category' => strtolower($row['tag'] ?? 'other'),
+                    'badge' => $row['label'] ?? 'In Stock',
+                    'rating' => '⭐⭐⭐⭐☆',
+                    'reviews' => '(' . rand(50, 500) . ')',
+                    'stock' => $row['stock'],
+                    'is_database' => true
+                ];
+            }
+            $use_database = true;
+        }
+    } catch (Exception $e) {
+        error_log('ProductCatalog database error: ' . $e->getMessage());
+    }
+}
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -35,14 +81,11 @@ foreach ($_SESSION['cart'] as $item) {
 
   <div class="search-wrapper">
     <i class="bi bi-search"></i>
-    <input type="search" placeholder="Search...">
+    <input type="search" id="productSearch" placeholder="Search products...">
   </div>
 
   <div class="top-icons">
-    <button id="loginIcon" class="login-btn">
-      <i class="bi bi-person"></i>
-      <span>Login</span>
-    </button>
+    <?php echo getAuthNavigationHTML(); ?>
     <a href="cart.php" class="cart-link">
       <i class="bi bi-cart">
         <span class="cart-count"><?php echo $cart_count; ?></span>
@@ -110,229 +153,86 @@ foreach ($_SESSION['cart'] as $item) {
       <section class="products-section">
         <div class="section-title">
           <h2>Product Catalog</h2>
-          <p class="results-count"><span id="resultsCount">8</span> products found</p>
+          <?php if (!$use_database && !empty($products)): ?>
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 5px; margin: 10px 0; color: #856404;">
+              <i class="bi bi-info-circle"></i> <strong>Demo Mode:</strong> Showing sample products. Add real products in the <a href="admin/inventory/inventory.php" target="_blank">admin panel</a>.
+            </div>
+          <?php endif; ?>
+          <p class="results-count"><span id="resultsCount"><?php echo count($products); ?></span> products found</p>
         </div>
         <div class="products-grid">
-          <div class="product-card" data-category="emergency" data-price="950">
-            <div class="product-image">
-              <img src="Assets/Healthproducts/dental care images/Top Performance ProDental Finger Brushes.png" alt="...">
-            </div>
-            <div class="product-info">
-              <div class="product-rating">
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star-half"></i>
-                <span class="count">(4.0k)</span>
+          <?php foreach ($products as $product): ?>
+            <div class="product-card" data-category="<?php echo htmlspecialchars($product['category']); ?>" data-price="<?php echo $product['price_raw']; ?>">
+              <a href="ProductView.php?id=<?php echo urlencode($product['id']); ?>" class="product-link">
+                <div class="product-image">
+                  <img src="<?php echo htmlspecialchars($product['image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>">
+                  
+                  <?php 
+                  // Add product badges
+                  $badge_class = '';
+                  $badge_text = '';
+                  
+                  if (isset($product['badge']) && strtolower($product['badge']) === 'new arrival') {
+                    $badge_class = 'new';
+                    $badge_text = 'New';
+                  } elseif (isset($product['category']) && strpos(strtolower($product['name']), 'blue') !== false) {
+                    $badge_class = 'blue-product';
+                    $badge_text = 'BLUE PRODUCT';
+                  }
+                  
+                  if ($badge_text): ?>
+                    <div class="product-badge <?php echo $badge_class; ?>">
+                      <?php echo $badge_text; ?>
+                    </div>
+                  <?php endif; ?>
+                  
+                  <?php if ($product['stock'] < 10): ?>
+                    <div style="position: absolute; top: 5px; right: 5px; background: #e74c3c; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em;">
+                      Low Stock!
+                    </div>
+                  <?php endif; ?>
+                </div>
+                <div class="product-info">
+                  <div class="product-rating">
+                    <span style="color: #ffc107;"><?php echo $product['rating']; ?></span>
+                    <span class="count"><?php echo $product['reviews']; ?></span>
+                  </div>
+                  <h3><?php echo htmlspecialchars($product['name']); ?></h3>
+                  <div class="product-price">
+                    <span class="current-price">₱ <?php echo $product['price']; ?></span>
+                  </div>
+                  <div class="product-meta">
+                    <?php echo htmlspecialchars($product['badge']); ?>
+                    Stock: <?php echo $product['stock']; ?>
+                  </div>
+                </div>
+              </a>
+              
+              <!-- Product Action Icons -->
+              <div class="product-actions">
+                <button class="add-to-wishlist" 
+                        data-product-id="<?php echo htmlspecialchars($product['id']); ?>"
+                        title="Add to Wishlist">
+                  <i class="bi bi-heart"></i>
+                </button>
+                <button class="add-to-cart" 
+                        data-product-id="<?php echo htmlspecialchars($product['id']); ?>" 
+                        data-product-name="<?php echo htmlspecialchars($product['name']); ?>" 
+                        data-product-price="<?php echo $product['price_raw']; ?>" 
+                        data-product-image="<?php echo htmlspecialchars($product['image']); ?>"
+                        <?php echo ($product['stock'] <= 0) ? 'disabled' : ''; ?>
+                        title="<?php echo ($product['stock'] <= 0) ? 'Out of Stock' : 'Add to Cart'; ?>">
+                  <i class="fa-solid fa-cart-shopping"></i>
+                </button>
               </div>
-              <h3>Emergency First Aid Kit</h3>
-              <div class="product-price">
-                <span class="current-price">P 950.00</span>
-                <span class="original-price">P 1250.00</span>
-              </div>
-              <button class="add-to-cart" 
-                      data-product-id="1" 
-                      data-product-name="Emergency First Aid Kit" 
-                      data-product-price="950.00" 
-                      data-product-image="Assets/Healthproducts/dental care images/Top Performance ProDental Finger Brushes.png">
-                <i class="fa-solid fa-cart-shopping"></i> Add to Cart
-              </button>
             </div>
-          </div>
-
-          <div class="product-card" data-category="tents" data-price="1200">
-            <div class="product-image">
-              <img src="Assets/Gallery_Images/TentSample.jpg" alt="">
-            </div>
-            <div class="product-info">
-              <div class="product-rating">
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <span class="count">(3.2k)</span>
-              </div>
-              <h3>4-Person Camping Tent</h3>
-              <div class="product-price">
-                <span class="current-price">P 1,200.00</span>
-              </div>
-              <button class="add-to-cart"
-                      data-product-id="2" 
-                      data-product-name="4-Person Camping Tent" 
-                      data-product-price="1200.00" 
-                      data-product-image="Assets/Gallery_Images/TentSample.jpg">
-                <i class="fa-solid fa-cart-shopping"></i> Add to Cart
-              </button>
-            </div>
-          </div>
-
-          <div class="product-card" data-category="cooking" data-price="750">
-            <div class="product-image">
-              <img src="Assets/Gallery_Images/CookingGearSample.png" alt="">
-            </div>
-            <div class="product-info">
-              <div class="product-rating">
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <span class="count">(1.8k)</span>
-              </div>
-              <h3>Portable Cooking Set</h3>
-              <div class="product-price">
-                <span class="current-price">P 750.00</span>
-              </div>
-              <button class="add-to-cart"
-                      data-product-id="3" 
-                      data-product-name="Portable Cooking Set" 
-                      data-product-price="750.00" 
-                      data-product-image="Assets/Gallery_Images/CookingGearSample.png">
-                <i class="fa-solid fa-cart-shopping"></i> Add to Cart
-              </button>
-            </div>
-          </div>
-
-          <div class="product-card" data-category="cooking" data-price="450">
-            <div class="product-image">
-              <img src="Assets/Gallery_Images/Camping Stove Sample.png" alt="">
-            </div>
-            <div class="product-info">
-              <div class="product-rating">
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star-half"></i>
-                <span class="count">(2.1k)</span>
-              </div>
-              <h3>Camping Stove</h3>
-              <div class="product-price">
-                <span class="current-price">P 450.00</span>
-              </div>
-              <button class="add-to-cart"
-                      data-product-id="4" 
-                      data-product-name="Camping Stove" 
-                      data-product-price="450.00" 
-                      data-product-image="Assets/Gallery_Images/Camping Stove Sample.png">
-                <i class="fa-solid fa-cart-shopping"></i> Add to Cart
-              </button>
-            </div>
-          </div>
-
-          <div class="product-card" data-category="emergency" data-price="320">
-            <div class="product-image">
-              <img src="Assets/Gallery_Images/Survival Kit Sample.png" alt="">
-            </div>
-            <div class="product-info">
-              <div class="product-rating">
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <span class="count">(1.5k)</span>
-              </div>
-              <h3>Survival Kit</h3>
-              <div class="product-price">
-                <span class="current-price">P 320.00</span>
-              </div>
-              <button class="add-to-cart"
-                      data-product-id="5" 
-                      data-product-name="Survival Kit" 
-                      data-product-price="320.00" 
-                      data-product-image="Assets/Gallery_Images/Survival Kit Sample.png">
-                <i class="fa-solid fa-cart-shopping"></i> Add to Cart
-              </button>
-            </div>
-          </div>
-
-          <div class="product-card" data-category="tents" data-price="890">
-            <div class="product-image">
-              <img src="Assets/Gallery_Images/HikingBackpackSample.png" alt="">
-            </div>
-            <div class="product-info">
-              <div class="product-rating">
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <span class="count">(2.3k)</span>
-              </div>
-              <h3>Hiking Backpack with Tent</h3>
-              <div class="product-price">
-                <span class="current-price">P 890.00</span>
-              </div>
-              <button class="add-to-cart"
-                      data-product-id="6" 
-                      data-product-name="Hiking Backpack with Tent" 
-                      data-product-price="890.00" 
-                      data-product-image="Assets/Gallery_Images/HikingBackpackSample.png">
-                <i class="fa-solid fa-cart-shopping"></i> Add to Cart
-              </button>
-            </div>
-          </div>
-
-          <div class="product-card" data-category="emergency" data-price="180">
-            <div class="product-image">
-              <img src="Assets/Gallery_Images/TravelBootsSample.png" alt="">
-            </div>
-            <div class="product-info">
-              <div class="product-rating">
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <span class="count">(987)</span>
-              </div>
-              <h3>Emergency Travel Boots</h3>
-              <div class="product-price">
-                <span class="current-price">P 180.00</span>
-              </div>
-              <button class="add-to-cart"
-                      data-product-id="7" 
-                      data-product-name="Emergency Travel Boots" 
-                      data-product-price="180.00" 
-                      data-product-image="Assets/Gallery_Images/TravelBootsSample.png">
-                <i class="fa-solid fa-cart-shopping"></i> Add to Cart
-              </button>
-            </div>
-          </div>
-
-          <div class="product-card" data-category="cooking" data-price="680">
-            <div class="product-image">
-              <img src="Assets/Gallery_Images/CookingGearSample.png" alt="">
-            </div>
-            <div class="product-info">
-              <div class="product-rating">
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star-half"></i>
-                <span class="count">(1.4k)</span>
-              </div>
-              <h3>Complete Cooking Kit</h3>
-              <div class="product-price">
-                <span class="current-price">P 680.00</span>
-              </div>
-              <button class="add-to-cart"
-                      data-product-id="8" 
-                      data-product-name="Complete Cooking Kit" 
-                      data-product-price="680.00" 
-                      data-product-image="Assets/Gallery_Images/CookingGearSample.png">
-                <i class="fa-solid fa-cart-shopping"></i> Add to Cart
-              </button>
-            </div>
-          </div>
-
+          <?php endforeach; ?>
         </div>
       </section>
     </div>
   </main>
 
-  <!-- AUTH MODAL COMPONENT -->
+  <!-- AUTH MODAL -->
   <?php include 'components/auth_modal.php'; ?>
 
 <script>
@@ -344,49 +244,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const priceValue = document.getElementById('priceValue');
   const clearFiltersBtn = document.querySelector('.clear-filters');
   const resultsCount = document.getElementById('resultsCount');
+  const searchInput = document.getElementById('productSearch');
   
-  // Add to cart functionality
-  addToCartButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      const productId = this.getAttribute('data-product-id') || 'demo_' + Date.now();
-      const productName = this.getAttribute('data-product-name') || 'Sample Product';
-      const productPrice = this.getAttribute('data-product-price') || '850.00';
-      const productImage = this.getAttribute('data-product-image') || 'Assets/placeholder.jpg';
-      
-      // Create form data
-      const formData = new FormData();
-      formData.append('product_id', productId);
-      formData.append('product_name', productName);
-      formData.append('product_price', productPrice);
-      formData.append('product_image', productImage);
-      formData.append('quantity', 1);
-      
-      // Send AJAX request to add item to cart
-      fetch('add_to_cart.php', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if(data.success) {
-          // Update cart count
-          const cartCount = document.querySelector('.cart-count');
-          if (cartCount) {
-            cartCount.textContent = data.cart_count;
-          }
-          
-          // Show success message
-          alert(`${data.product_name || productName} added to cart!`);
-        } else {
-          alert('Failed to add product to cart: ' + (data.message || 'Unknown error'));
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('Error adding product to cart');
-      });
-    });
-  });
+  // Add to cart functionality is now handled by the global cart.js file
   
   // Filter functionality
   function filterProducts() {
@@ -432,12 +292,196 @@ document.addEventListener('DOMContentLoaded', function() {
     filterProducts();
   });
   
+  // Search functionality
+  let searchTimeout;
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        const searchTerm = this.value.trim();
+        if (searchTerm.length >= 2) {
+          performSearch(searchTerm);
+        } else if (searchTerm.length === 0) {
+          // Reset to show all products
+          location.reload();
+        }
+      }, 300);
+    });
+  }
+  
+  function performSearch(searchTerm) {
+    const selectedCategory = document.querySelector('input[name="category"]:checked').value;
+    const maxPrice = parseInt(priceRange.value);
+    
+    fetch(`search_products.php?q=${encodeURIComponent(searchTerm)}&category=${selectedCategory}&max_price=${maxPrice}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          updateProductGrid(data.products);
+          resultsCount.textContent = data.count;
+        }
+      })
+      .catch(error => {
+        console.error('Search error:', error);
+      });
+  }
+  
+  function updateProductGrid(products) {
+    const productsGrid = document.querySelector('.products-grid');
+    productsGrid.innerHTML = '';
+    
+    products.forEach(product => {
+      const productCard = createProductCard(product);
+      productsGrid.appendChild(productCard);
+    });
+    
+    // Reattach event listeners to new add-to-cart buttons
+    refreshCartButtons();
+  }
+  
+  function createProductCard(product) {
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    card.setAttribute('data-category', product.category);
+    card.setAttribute('data-price', product.price_raw);
+    
+    card.innerHTML = `
+      <a href="ProductView.php?id=${encodeURIComponent(product.id)}" class="product-link">
+        <div class="product-image">
+          <img src="${product.image}" alt="${product.name}">
+          ${product.stock < 10 ? '<div style="position: absolute; top: 5px; right: 5px; background: #e74c3c; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em;">Low Stock!</div>' : ''}
+        </div>
+        <div class="product-info">
+          <div class="product-rating">
+            <span style="color: #ffc107;">${product.rating}</span>
+            <span class="count">${product.reviews}</span>
+          </div>
+          <h3>${product.name}</h3>
+          <div class="product-price">
+            <span class="current-price">₱ ${product.price}</span>
+          </div>
+          <div class="product-meta">
+            ${product.badge} Stock: ${product.stock}
+          </div>
+        </div>
+      </a>
+      <div class="product-actions">
+        <button class="add-to-wishlist" 
+                data-product-id="${product.id}"
+                title="Add to Wishlist">
+          <i class="bi bi-heart"></i>
+        </button>
+        <button class="add-to-cart" 
+                data-product-id="${product.id}" 
+                data-product-name="${product.name}" 
+                data-product-price="${product.price_raw}" 
+                data-product-image="${product.image}"
+                ${product.stock <= 0 ? 'disabled' : ''}
+                title="${product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}">
+          <i class="fa-solid fa-cart-shopping"></i>
+        </button>
+      </div>
+    `;
+    
+    return card;
+  }
+  
+  // Cart functionality is now handled by the global cart.js file
+  
   // Initial filter
   filterProducts();
+  
+  // Update initial count
+  resultsCount.textContent = document.querySelectorAll('.product-card').length;
+  
+  // Wishlist functionality
+  function initWishlistButtons() {
+    const wishlistButtons = document.querySelectorAll('.add-to-wishlist');
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    
+    // Mark already wishlisted items
+    wishlistButtons.forEach(btn => {
+      const productId = btn.getAttribute('data-product-id');
+      if (wishlist.includes(productId)) {
+        btn.classList.add('active');
+        btn.querySelector('i').classList.remove('bi-heart');
+        btn.querySelector('i').classList.add('bi-heart-fill');
+      }
+      
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleWishlist(this);
+      });
+    });
+  }
+  
+  function toggleWishlist(button) {
+    const productId = button.getAttribute('data-product-id');
+    let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    const icon = button.querySelector('i');
+    
+    if (wishlist.includes(productId)) {
+      // Remove from wishlist
+      wishlist = wishlist.filter(id => id !== productId);
+      button.classList.remove('active');
+      icon.classList.remove('bi-heart-fill');
+      icon.classList.add('bi-heart');
+      showNotification('Removed from wishlist', 'info');
+    } else {
+      // Add to wishlist
+      wishlist.push(productId);
+      button.classList.add('active');
+      icon.classList.remove('bi-heart');
+      icon.classList.add('bi-heart-fill');
+      showNotification('Added to wishlist!', 'success');
+    }
+    
+    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+  }
+  
+  function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${type === 'success' ? '#10b981' : '#6b7280'};
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10000;
+      font-size: 14px;
+      animation: slideIn 0.3s ease;
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 2 seconds
+    setTimeout(() => {
+      notification.style.animation = 'slideOut 0.3s ease';
+      setTimeout(() => notification.remove(), 300);
+    }, 2000);
+  }
+  
+  // Initialize wishlist buttons
+  initWishlistButtons();
+  
+  // Re-initialize wishlist buttons after filtering/searching
+  const originalRefreshCartButtons = window.refreshCartButtons || function() {};
+  window.refreshCartButtons = function() {
+    originalRefreshCartButtons();
+    initWishlistButtons();
+  };
 });
 </script>
 
-<!-- Include Auth Modal Component Script -->
-<script src="components/auth_modal.js"></script>
+<!-- Scripts -->
+<script src="Js/user_dropdown.js"></script>
+<script src="Js/cart.js"></script>
+<script src="components/auth_modal_otp.js"></script>
 </body>
 </html>

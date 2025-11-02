@@ -4,15 +4,52 @@
  * Step 1: Validate signup data and send OTP
  */
 
-session_start();
-header('Content-Type: application/json');
+// Start output buffering to prevent any accidental output
+ob_start();
 
-// Enable error reporting for debugging (disable in production)
-error_reporting(E_ALL);
+// Disable error display to prevent HTML error output
 ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+error_reporting(E_ALL);
 
-require_once __DIR__ . '/includes/db.php';
-require_once __DIR__ . '/includes/OTPManager.php';
+session_start();
+
+// Clean any output that might have occurred
+if (ob_get_length()) {
+    ob_clean();
+}
+
+// Set JSON header
+header('Content-Type: application/json');
+header('Cache-Control: no-cache, must-revalidate');
+header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+
+// Debug logging
+error_log("Signup Handler Request received - Method: " . $_SERVER['REQUEST_METHOD'] . " - Time: " . date('Y-m-d H:i:s'));
+
+try {
+    require_once __DIR__ . '/includes/db.php';
+    require_once __DIR__ . '/includes/OTPManager.php';
+} catch (Exception $e) {
+    error_log("Include error in signup_handler.php: " . $e->getMessage());
+    echo json_encode([
+        'success' => false,
+        'message' => 'System error. Please try again later.',
+        'error_code' => 'SYSTEM_ERROR'
+    ]);
+    exit;
+}
+
+// Check database connection
+if (!isset($conn) || $conn->connect_error || isset($db_connection_error)) {
+    error_log("Database connection error in signup_handler.php");
+    echo json_encode([
+        'success' => false,
+        'message' => 'Database connection error. Please try again later.',
+        'error_code' => 'DB_ERROR'
+    ]);
+    exit;
+}
 
 // CSRF Protection
 if (!isset($_SESSION['csrf_token'])) {
@@ -150,15 +187,39 @@ try {
         'email' => $email
     ]);
     
+    // End output buffering and send output
+    ob_end_flush();
+    
 } catch (Exception $e) {
-    // Log error
-    error_log("Signup error: " . $e->getMessage());
+    // Clean any output that might have occurred
+    if (ob_get_length()) {
+        ob_clean();
+    }
+    
+    // Log error with detailed information for debugging
+    $errorDetails = [
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+        'trace' => $e->getTraceAsString(),
+        'email' => $email ?? 'unknown',
+        'timestamp' => date('Y-m-d H:i:s')
+    ];
+    
+    error_log("Signup Handler Error: " . json_encode($errorDetails));
     
     echo json_encode([
         'success' => false,
         'message' => 'An error occurred during signup. Please try again.',
-        'error_code' => 'INTERNAL_ERROR'
+        'error_code' => 'INTERNAL_ERROR',
+        'debug' => [
+            'error' => $e->getMessage(),
+            'line' => $e->getLine()
+        ]
     ]);
+    
+    // End output buffering
+    ob_end_flush();
 }
 
 /**
@@ -237,4 +298,10 @@ function logActivity($action, $email, $ipAddress) {
     $stmt->bind_param("ssss", $action, $email, $ipAddress, $userAgent);
     $stmt->execute();
 }
+
+// Final safety check - ensure we only output JSON
+if (ob_get_contents() !== false) {
+    ob_end_clean();
+}
+?>
 ?>

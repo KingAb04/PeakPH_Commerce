@@ -4,35 +4,130 @@
  * Step 2: Verify OTP and complete user registration
  */
 
+// Start output buffering to prevent any accidental output
+ob_start();
+
+// Disable error display to prevent HTML error output
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
-header('Content-Type: application/json')} catch (Exception $e) {
-    // Log error with detailed information for debugging
-    $errorDetails = [
-        'message' => $e->getMessage(),
-        'file' => $e->getFile(),
-        'line' => $e->getLine(),
-        'trace' => $e->getTraceAsString(),
-        'email' => $email ?? 'unknown',
-        'timestamp' => date('Y-m-d H:i:s')
-    ];
-    
-    error_log("OTP Verification Error: " . json_encode($errorDetails));
-    
+
+// Clean any output that might have occurred
+if (ob_get_length()) {
+    ob_clean();
+}
+
+// Set JSON header
+header('Content-Type: application/json');
+header('Cache-Control: no-cache, must-revalidate');
+header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+
+// Debug logging
+error_log("OTP Verification Request received - Method: " . $_SERVER['REQUEST_METHOD'] . " - Time: " . date('Y-m-d H:i:s'));
+
+try {
+    require_once __DIR__ . '/includes/db.php';
+    require_once __DIR__ . '/includes/OTPManager.php';
+} catch (Exception $e) {
+    error_log("Include error in verify_otp.php: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'An error occurred during verification. Please try again.',
-        'error_code' => 'INTERNAL_ERROR',
-        'debug' => [
-            'error' => $e->getMessage(),
-            'line' => $e->getLine()
-        ]
+        'message' => 'System error. Please try again later.',
+        'error_code' => 'SYSTEM_ERROR'
     ]);
-}able error reporting for debugging (disable in production)
-error_reporting(E_ALL);
-ini_set('display_errors', 0);
+    exit;
+}
 
-require_once __DIR__ . '/includes/db.php';
-require_once __DIR__ . '/includes/OTPManager.php';
+// Check database connection
+if (!isset($conn) || $conn->connect_error || isset($db_connection_error)) {
+    error_log("Database connection error in verify_otp.php");
+    echo json_encode([
+        'success' => false,
+        'message' => 'Database connection error. Please try again later.',
+        'error_code' => 'DB_ERROR'
+    ]);
+    exit;
+}
+
+/**
+ * Check if email already exists in database
+ */
+function emailAlreadyExists($email) {
+    global $conn;
+    
+    $stmt = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    return $result->num_rows > 0;
+}
+
+/**
+ * Create user in database
+ */
+function createUser($userData) {
+    global $conn;
+    
+    // Create users table if it doesn't exist
+    $conn->query("CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        full_name VARCHAR(100) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        email_verified TINYINT(1) DEFAULT 1,
+        is_active TINYINT(1) DEFAULT 1,
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_email (email)
+    )");
+    
+    $stmt = $conn->prepare("
+        INSERT INTO users (full_name, email, password, ip_address, user_agent) 
+        VALUES (?, ?, ?, ?, ?)
+    ");
+    
+    $stmt->bind_param(
+        "sssss", 
+        $userData['full_name'],
+        $userData['email'],
+        $userData['password'],
+        $userData['ip_address'],
+        $userData['user_agent']
+    );
+    
+    if ($stmt->execute()) {
+        return $conn->insert_id;
+    }
+    
+    return false;
+}
+
+/**
+ * Log activity for security monitoring
+ */
+function logActivity($action, $email, $ipAddress) {
+    global $conn;
+    
+    // Create activity log table if it doesn't exist
+    $conn->query("CREATE TABLE IF NOT EXISTS activity_logs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        action VARCHAR(50) NOT NULL,
+        email VARCHAR(255),
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+    
+    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+    $stmt = $conn->prepare("INSERT INTO activity_logs (action, email, ip_address, user_agent) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $action, $email, $ipAddress, $userAgent);
+    $stmt->execute();
+}
 
 // CSRF Protection - Generate token if not exists
 if (!isset($_SESSION['csrf_token'])) {
@@ -60,8 +155,12 @@ try {
     $email = trim(strtolower($_POST['email'] ?? ''));
     $otpCode = trim($_POST['otp_code'] ?? '');
     
+    // Debug logging
+    error_log("OTP Verification - Email: $email, OTP Code: $otpCode");
+    
     // Basic validation
     if (empty($email) || empty($otpCode)) {
+        error_log("OTP Verification - Missing email or OTP code");
         echo json_encode([
             'success' => false,
             'message' => 'Email and OTP code are required'
@@ -178,92 +277,43 @@ try {
         'redirect' => 'index.php' // Where to redirect after successful signup
     ]);
     
+    // End output buffering and send output
+    ob_end_flush();
+    
 } catch (Exception $e) {
-    // Log error
-    error_log("OTP verification error: " . $e->getMessage());
+    // Clean any output that might have occurred
+    if (ob_get_length()) {
+        ob_clean();
+    }
+    
+    // Log error with detailed information for debugging
+    $errorDetails = [
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+        'trace' => $e->getTraceAsString(),
+        'email' => $email ?? 'unknown',
+        'timestamp' => date('Y-m-d H:i:s')
+    ];
+    
+    error_log("OTP Verification Error: " . json_encode($errorDetails));
     
     echo json_encode([
         'success' => false,
         'message' => 'An error occurred during verification. Please try again.',
-        'error_code' => 'INTERNAL_ERROR'
+        'error_code' => 'INTERNAL_ERROR',
+        'debug' => [
+            'error' => $e->getMessage(),
+            'line' => $e->getLine()
+        ]
     ]);
+    
+    // End output buffering
+    ob_end_flush();
 }
 
-/**
- * Check if email already exists in database
- */
-function emailAlreadyExists($email) {
-    global $conn;
-    
-    $stmt = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    return $result->num_rows > 0;
-}
-
-/**
- * Create user in database
- */
-function createUser($userData) {
-    global $conn;
-    
-    // Create users table if it doesn't exist
-    $conn->query("CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        full_name VARCHAR(100) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        email_verified TINYINT(1) DEFAULT 1,
-        is_active TINYINT(1) DEFAULT 1,
-        ip_address VARCHAR(45),
-        user_agent TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX idx_email (email)
-    )");
-    
-    $stmt = $conn->prepare("
-        INSERT INTO users (full_name, email, password, ip_address, user_agent) 
-        VALUES (?, ?, ?, ?, ?)
-    ");
-    
-    $stmt->bind_param(
-        "sssss", 
-        $userData['full_name'],
-        $userData['email'],
-        $userData['password'],
-        $userData['ip_address'],
-        $userData['user_agent']
-    );
-    
-    if ($stmt->execute()) {
-        return $conn->insert_id;
-    }
-    
-    return false;
-}
-
-/**
- * Log activity for security monitoring
- */
-function logActivity($action, $email, $ipAddress) {
-    global $conn;
-    
-    // Create activity log table if it doesn't exist
-    $conn->query("CREATE TABLE IF NOT EXISTS activity_logs (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        action VARCHAR(50) NOT NULL,
-        email VARCHAR(255),
-        ip_address VARCHAR(45),
-        user_agent TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )");
-    
-    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
-    $stmt = $conn->prepare("INSERT INTO activity_logs (action, email, ip_address, user_agent) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $action, $email, $ipAddress, $userAgent);
-    $stmt->execute();
+// Final safety check - ensure we only output JSON
+if (ob_get_contents() !== false) {
+    ob_end_clean();
 }
 ?>

@@ -1,12 +1,7 @@
 <?php
-session_start();
+require_once('../auth_helper.php');
+requireAdminAuth();
 require_once("../../includes/db.php");
-
-// Redirect if not logged in
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-  header("Location: ../index.php");
-  exit;
-}
 
 // Handle Add User form
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_user'])) {

@@ -1,41 +1,78 @@
 <?php
-session_start();
+require_once 'includes/user_auth.php';
 
 // Initialize cart if it doesn't exist
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = array();
 }
 
+$message = '';
+$error = '';
+
 // Handle cart actions
 if (isset($_POST['action'])) {
-    switch ($_POST['action']) {
-        case 'update':
-            if (isset($_POST['product_id']) && isset($_POST['quantity'])) {
-                $product_id = $_POST['product_id'];
-                $quantity = intval($_POST['quantity']);
-                
-                if ($quantity > 0) {
-                    $_SESSION['cart'][$product_id]['quantity'] = $quantity;
-                } else {
-                    unset($_SESSION['cart'][$product_id]);
+    try {
+        switch ($_POST['action']) {
+            case 'update':
+                if (isset($_POST['product_id']) && isset($_POST['quantity'])) {
+                    $product_id = $_POST['product_id'];
+                    $quantity = intval($_POST['quantity']);
+                    
+                    if (isset($_SESSION['cart'][$product_id])) {
+                        if ($quantity > 0) {
+                            $_SESSION['cart'][$product_id]['quantity'] = $quantity;
+                            $message = 'Cart updated successfully!';
+                        } else {
+                            unset($_SESSION['cart'][$product_id]);
+                            $message = 'Item removed from cart!';
+                        }
+                    } else {
+                        $error = 'Product not found in cart.';
+                    }
                 }
-            }
-            break;
-            
-        case 'remove':
-            if (isset($_POST['product_id'])) {
-                unset($_SESSION['cart'][$_POST['product_id']]);
-            }
-            break;
-            
-        case 'clear':
-            $_SESSION['cart'] = array();
-            break;
+                break;
+                
+            case 'remove':
+                if (isset($_POST['product_id'])) {
+                    $product_id = $_POST['product_id'];
+                    if (isset($_SESSION['cart'][$product_id])) {
+                        $product_name = $_SESSION['cart'][$product_id]['name'];
+                        unset($_SESSION['cart'][$product_id]);
+                        $message = $product_name . ' removed from cart!';
+                    } else {
+                        $error = 'Product not found in cart.';
+                    }
+                }
+                break;
+                
+            case 'clear':
+                $_SESSION['cart'] = array();
+                $message = 'Cart cleared successfully!';
+                break;
+                
+            default:
+                $error = 'Invalid action.';
+        }
+    } catch (Exception $e) {
+        $error = 'An error occurred while updating your cart. Please try again.';
+        error_log('Cart error: ' . $e->getMessage());
     }
     
     // Redirect to prevent form resubmission
-    header('Location: cart.php');
+    $redirect_url = 'cart.php';
+    if ($message) $redirect_url .= '?message=' . urlencode($message);
+    if ($error) $redirect_url .= '?error=' . urlencode($error);
+    
+    header('Location: ' . $redirect_url);
     exit;
+}
+
+// Get messages from URL parameters
+if (isset($_GET['message'])) {
+    $message = $_GET['message'];
+}
+if (isset($_GET['error'])) {
+    $error = $_GET['error'];
 }
 
 // Calculate totals
@@ -240,10 +277,7 @@ foreach ($_SESSION['cart'] as $item) {
             </div>
 
             <div class="top-icons">
-                <button id="loginIcon" class="login-btn">
-                    <i class="bi bi-person"></i>
-                    <span>Login</span>
-                </button>
+                <?php echo getAuthNavigationHTML(); ?>
                 <a href="cart.php" class="cart-link">
                     <i class="bi bi-cart">
                         <span class="cart-count"><?php echo $item_count; ?></span>
@@ -270,6 +304,18 @@ foreach ($_SESSION['cart'] as $item) {
             <p><?php echo $item_count; ?> item(s) in your cart</p>
         </div>
 
+        <?php if ($message): ?>
+            <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #c3e6cb;">
+                ✅ <?php echo htmlspecialchars($message); ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($error): ?>
+            <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #f5c6cb;">
+                ❌ <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
+
         <?php if (empty($_SESSION['cart'])): ?>
             <div class="empty-cart">
                 <i class="bi bi-cart-x"></i>
@@ -281,7 +327,62 @@ foreach ($_SESSION['cart'] as $item) {
             <div class="cart-items">
                 <?php foreach ($_SESSION['cart'] as $product_id => $item): ?>
                     <div class="cart-item">
-                        <img src="<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="item-image">
+                        <?php
+                        error_log('Cart item image path: ' . print_r($item['image'], true));
+                        
+                        $image_path = $item['image'];
+                        
+                        // Debug output
+                        $debug_paths = [
+                            'Original path' => $image_path,
+                            'Physical path 1' => $_SERVER['DOCUMENT_ROOT'] . $image_path,
+                            'Physical path 2' => $_SERVER['DOCUMENT_ROOT'] . '/admin/' . ltrim($image_path, '/'),
+                            'Physical path 3' => __DIR__ . $image_path,
+                        ];
+                        
+                        error_log('Checking image paths in cart:');
+                        foreach ($debug_paths as $desc => $path) {
+                            error_log($desc . ': ' . $path . ' - Exists: ' . (file_exists($path) ? 'Yes' : 'No'));
+                        }
+                        
+                        // Define base64 placeholder image
+                        $placeholder_image = 'data:image/svg+xml;base64,' . base64_encode('<?xml version="1.0" encoding="UTF-8"?><svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#f0f0f0"/><text x="100" y="100" font-family="Arial" font-size="14" text-anchor="middle" fill="#999">No Image</text></svg>');
+                        
+                        // Handle different path scenarios
+                        if (!empty($image_path)) {
+                            error_log('Original image path: ' . $image_path);
+                            
+                            // If path doesn't start with admin or /admin, check if it needs to be added
+                            if (!preg_match('~^/?admin/~', $image_path)) {
+                                if (strpos($image_path, 'uploads/') === 0) {
+                                    $image_path = '/admin/' . $image_path;
+                                } else {
+                                    $image_path = '/admin/uploads/' . basename($image_path);
+                                }
+                            } else if (strpos($image_path, 'admin/') === 0) {
+                                // Ensure there's a leading slash
+                                $image_path = '/' . $image_path;
+                            }
+                            
+                            error_log('Processed image path: ' . $image_path);
+                            
+                            // Double check the file exists physically
+                            $physical_path = $_SERVER['DOCUMENT_ROOT'] . $image_path;
+                            if (!file_exists($physical_path)) {
+                                error_log('Warning: Image file not found at: ' . $physical_path);
+                                $image_path = $placeholder_image;
+                            }
+                        } else {
+                            $image_path = $placeholder_image;
+                            error_log('Using placeholder image - no path provided');
+                        }
+                        
+                        error_log('Final image path in cart: ' . $image_path);
+                        ?>
+                        <img src="<?php echo htmlspecialchars($image_path); ?>" 
+                             alt="<?php echo htmlspecialchars($item['name']); ?>" 
+                             class="item-image" 
+                             onerror="this.src='/Assets/placeholder.svg'">
                         
                         <div class="item-details">
                             <div class="item-name"><?php echo htmlspecialchars($item['name']); ?></div>
@@ -332,7 +433,7 @@ foreach ($_SESSION['cart'] as $item) {
                     <span>₱<?php echo number_format($total + 50, 2); ?></span>
                 </div>
                 
-                <button class="checkout-btn">Proceed to Checkout</button>
+                <a href="checkout.php" class="checkout-btn" style="text-decoration: none; display: block; text-align: center;">Proceed to Checkout</a>
                 
                 <form method="post" style="margin-top: 1rem;">
                     <input type="hidden" name="action" value="clear">
@@ -341,6 +442,9 @@ foreach ($_SESSION['cart'] as $item) {
             </div>
         <?php endif; ?>
     </div>
+
+    <!-- AUTH MODAL -->
+    <?php include 'components/auth_modal.php'; ?>
 
     <script>
         function updateQuantity(productId, quantity) {
@@ -357,5 +461,9 @@ foreach ($_SESSION['cart'] as $item) {
             form.submit();
         }
     </script>
+    <script src="Js/user_dropdown.js"></script>
+    <script src="Js/cart.js"></script>
+    <script src="components/auth_modal_otp.js"></script>
+    <script src="Js/JavaScript.js"></script>
 </body>
 </html>

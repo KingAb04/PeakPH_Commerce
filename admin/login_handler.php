@@ -1,4 +1,10 @@
 <?php
+// Set same session configuration as auth_helper
+ini_set('session.gc_maxlifetime', 8 * 60 * 60);
+ini_set('session.cookie_lifetime', 8 * 60 * 60);
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_strict_mode', 1);
+session_name('PEAKPH_ADMIN_SESSION');
 session_start();
 
 // Admin credentials (same as your existing login.php)
@@ -12,15 +18,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // Check if login is correct
     if ($email === $admin_email && $password === $admin_pass) {
+        // Regenerate session ID for security
+        session_regenerate_id(true);
+        
         $_SESSION['logged_in'] = true;
         $_SESSION['is_admin'] = true;
         $_SESSION['admin_email'] = $email;
         $_SESSION['login_time'] = time();
+        $_SESSION['last_activity'] = time();
+        $_SESSION['session_regenerated'] = time();
         
         // Set remember me cookie if requested (30 days)
         if ($remember_me) {
             $cookie_value = base64_encode($email . ':' . time());
-            setcookie('admin_remember', $cookie_value, time() + (30 * 24 * 60 * 60), '/admin/');
+            // Set cookie path to root so it works across all admin subdirectories
+            setcookie('admin_remember', $cookie_value, time() + (30 * 24 * 60 * 60), '/');
         }
         
         // Redirect to admin dashboard
@@ -40,15 +52,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             
             // Check if cookie is still valid (30 days) and email matches
             if (time() - $timestamp < (30 * 24 * 60 * 60) && $stored_email === $admin_email) {
+                // Regenerate session ID for security
+                session_regenerate_id(true);
+                
                 $_SESSION['logged_in'] = true;
                 $_SESSION['is_admin'] = true;
                 $_SESSION['admin_email'] = $stored_email;
                 $_SESSION['login_time'] = time();
+                $_SESSION['last_activity'] = time();
+                $_SESSION['session_regenerated'] = time();
                 header("Location: dashboard.php");
                 exit;
             } else {
                 // Cookie expired or invalid, remove it
-                setcookie('admin_remember', '', time() - 3600, '/admin/');
+                setcookie('admin_remember', '', time() - 3600, '/');
             }
         }
     }

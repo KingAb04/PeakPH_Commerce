@@ -1,3 +1,10 @@
+/* Force green plus sign for Add Product button */
+.show-form-btn .plus-green {
+  color: #22c55e; /* Tailwind green-500 */
+  font-size: 18px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
 /* =========================================================
    GLOBAL STYLES (APPLIES TO ALL PHP FILES)
    ========================================================= */
@@ -833,6 +840,112 @@ table img {
   font-weight: bold;
 }
 /* You can add user-specific button styles here if needed */
+
+/* =========================================================
+   INVENTORY FORMS & MODALS
+   ========================================================= */
+
+/* Hidden class for forms */
+.hidden {
+  display: none !important;
+}
+
+/* Add Product Form Styles */
+.add-form {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin: 20px 0;
+  border: 1px solid #ddd;
+}
+
+.add-form h3 {
+  color: #2e765e;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #2e765e;
+  padding-bottom: 10px;
+}
+
+.add-form label {
+  display: block;
+  margin: 10px 0 5px 0;
+  font-weight: 600;
+  color: #333;
+}
+
+.add-form input[type="text"],
+.add-form input[type="number"],
+.add-form input[type="file"],
+.add-form select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  background-color: white;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 20px;
+  padding-right: 40px;
+}
+
+.add-form input[type="text"]:focus,
+.add-form input[type="number"]:focus,
+.add-form select:focus {
+  border-color: #2e765e;
+  outline: none;
+  box-shadow: 0 0 5px rgba(46, 118, 94, 0.3);
+}
+
+.add-form .save-btn,
+.add-form .cancel-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 10px;
+  margin-top: 10px;
+}
+
+.add-form .save-btn {
+  background: #2e765e;
+  color: white;
+}
+
+.add-form .save-btn:hover {
+  background: #245147;
+}
+
+.add-form .cancel-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.add-form .cancel-btn:hover {
+  background: #c82333;
+}
+
+.show-form-btn {
+  background: #2e765e;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 10px 0;
+}
+
+.show-form-btn:hover {
+  background: #245147;
+}
 
 /* =========================================================
    ORDERS PAGE (orders.html)
